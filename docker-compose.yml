@@ -5,7 +5,6 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - backend_data:/app/social.db  # сохраняем БД
     environment:
       - SECRET_KEY=your-secret-key-change-in-production
     restart: unless-stopped
