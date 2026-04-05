@@ -47,3 +47,5 @@ class BackendClient:
                 headers=headers,
                 timeout=10.0
             )
+        
+# Проверка
