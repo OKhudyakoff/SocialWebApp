@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from .database import engine, Base
 from .routers import auth, users, posts, contacts, messages, websocket
-import uvicorn
 
 Base.metadata.create_all(bind=engine)
 
@@ -17,6 +16,3 @@ app.include_router(websocket.router)
 @app.get("/")
 def root():
     return {"message": "Social Network API"}
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

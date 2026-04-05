@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.routers import auth, feed, profile, interactions, contacts, messenger
-import uvicorn
 
 app = FastAPI(title="Social Network Frontend")
 
@@ -20,6 +19,3 @@ app.include_router(messenger.router)
 async def home():
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url="/login")
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
