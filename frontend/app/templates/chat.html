@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header">
+        <h3>Чат с {{ other_user.username }}</h3>
+        <span class="status" id="user-status">{% if other_user.is_online %}🟢 Онлайн{% else %}⚫ Офлайн{% endif %}</span>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+        {% for msg in messages %}
+        <div class="message {% if msg.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+            <p>{{ msg.content }}</p>
+            <small>{{ msg.created_at }}</small>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="chat-input">
+        <textarea id="message-input" placeholder="Введите сообщение..." rows="1" dir="ltr"></textarea>
+        <button id="send-btn">▶</button>
+    </div>
+</div>
+
+<script>
+    // Автоматическое изменение высоты textarea
+    const textarea = document.getElementById('message-input');
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 200) + 'px'; // максимум 200px
+    });
+    
+    // Отправка по Enter (без переноса строки)
+    textarea.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.getElementById('send-btn').click();
+        }
+    });
+    
+    // Остальной код (отправка сообщения, etc.) без изменений
+</script>
+
+<script>
+    const otherUserId = {{ other_user.id }};
+    window.currentChatUserId = otherUserId;
+    
+    // Пометить сообщения как прочитанные
+    async function markMessagesAsRead() {
+        try {
+            const response = await fetch(`/messages/read/${otherUserId}?token=${token}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (response.ok) {
+                console.log("Messages marked as read");
+            }
+        } catch (err) {
+            console.error("Failed to mark as read:", err);
+        }
+    }
+    
+    window.appendChatMessage = function(msg, isSent) {
+        const messagesDiv = document.getElementById('chat-messages');
+        if (!messagesDiv) return;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+        const time = new Date(msg.created_at).toLocaleString();
+        msgDiv.innerHTML = `<p>${escapeHtml(msg.content)}</p><small>${time}</small>`;
+        messagesDiv.appendChild(msgDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    };
+    
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+   document.getElementById('send-btn').onclick = () => {
+        const textarea = document.getElementById('message-input');
+        const content = textarea.value.trim();
+        if (!content) return;
+        if (!window.globalWs || window.globalWs.readyState !== WebSocket.OPEN) {
+            alert("Соединение не установлено.");
+            return;
+        }
+        window.globalWs.send(JSON.stringify({ receiver_id: otherUserId, content: content }));
+        const tempMsg = {
+            content: content,
+            created_at: new Date().toISOString(),
+            sender_id: window.currentUserId
+        };
+        window.appendChatMessage(tempMsg, true);
+        textarea.value = "";
+        textarea.style.height = 'auto'; // сброс высоты
+    };
+    
+    // Прокрутка вниз при загрузке
+    window.onload = () => {
+        const container = document.getElementById('chat-messages');
+        if (container) container.scrollTop = container.scrollHeight;
+    };
+
+    // Вызвать при загрузке страницы
+    markMessagesAsRead();
+</script>
+{% endblock %}

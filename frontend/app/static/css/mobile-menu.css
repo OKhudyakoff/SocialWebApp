@@ -1,0 +1,83 @@
+/* ===== ГАМБУРГЕР И МОБИЛЬНОЕ МЕНЮ ===== */
+.hamburger {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    z-index: 1001;
+}
+
+.hamburger span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background: var(--gray-800);
+    margin: 5px 0;
+    transition: 0.3s;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+}
+
+.overlay.active {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .hamburger {
+        display: inline-block;
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        width: 280px;
+        height: 100vh;
+        background: white;
+        border-right: none;
+        box-shadow: none;
+    }
+    
+    .sidebar.open {
+        left: 0;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .app-container {
+        flex-direction: column;
+    }
+    
+    .main-content {
+        padding: 0rem;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    body.menu-open {
+        overflow: hidden;
+    }
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+.hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+}

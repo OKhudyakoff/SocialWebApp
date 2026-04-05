@@ -1,0 +1,28 @@
+/* Toast notification */
+.toast {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 40px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    z-index: 10000;
+    transition: opacity 0.3s, visibility 0.3s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    pointer-events: none;
+}
+
+.toast.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.toast.show {
+    opacity: 1;
+    visibility: visible;
+}

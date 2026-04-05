@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="contacts-header">
+    <h2>Все пользователи</h2>
+    <p>Найдите новых друзей</p>
+</div>
+
+<div class="users-grid">
+    {% for contact in contacts %}
+    <div class="user-card">
+        <div class="user-avatar">👤</div>
+        <div class="user-info">
+            <span class="status" id="user-status">{% if contact.is_online %}🟢 Онлайн{% else %}⚫ Офлайн{% endif %}</span>
+            <h3><a href="/user/{{ contact.id }}?token={{ token }}">{{ contact.username }}</a></h3>
+            {% if current_user_id == contact.id %}
+                <h4> Это Вы! </h4>
+            {% endif %}
+            <p class="user-email">{{ contact.email }}</p>
+            <p class="user-joined">с нами с {{ contact.created_at[:10] }}</p>
+        </div>
+        <div class="user-actions">
+            {% if current_user_id != contact.id %}
+                <a href="/user/{{ contact.id }}?token={{ token }}" class="profile-link">Профиль</a>
+                <a href="/chat/{{ contact.id }}?token={{ token }}" class="profile-link">💬 Написать</a>
+            {% else %}
+                <a href="/user/{{ contact.id }}?token={{ token }}" class="profile-link">Мой профиль</a>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>Ни одного пользователя не найдено... ТОГДА ТЫ КТО!?</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    // Временное уведомление для кнопки "Написать"
+    document.querySelectorAll('.message-user-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const username = btn.dataset.username;
+            showToast(`Мессенджер в разработке. Напишите ${username} позже.`);
+        });
+    });
+</script>
+{% endblock %}

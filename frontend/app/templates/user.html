@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Шапка профиля с обложкой -->
+    <div class="profile-cover">
+        <div class="profile-avatar-wrapper">
+            <div class="profile-avatar-large">👤</div>
+            <span class="status" id="user-status">{% if user.is_online %}🟢 Онлайн{% else %}⚫ Офлайн{% endif %}</span>
+        </div>
+    </div>
+    
+    <!-- Информация о пользователе -->
+    <div class="profile-info">
+        <h1>{{ user.username }}</h1>
+        <p class="profile-email">Почта: {{ user.email }}</p>
+        <p class="profile-joined">Присоединился: {{ user.created_at[:10] }}</p>
+        
+        <div class="profile-stats">
+            <div class="stat">
+                <span class="stat-value">{{ posts|length }}</span>
+                <span class="stat-label">постов</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">{{ posts|length }}</span>
+                <span class="stat-label">Лайков</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">{{ posts|length }}</span>
+                <span class="stat-label">Комментариев</span>
+            </div>
+        </div>
+        
+        <!-- Кнопка действия (если это не текущий пользователь) -->
+        {% if current_user_id != user.id %}
+        <a href="/chat/{{ user.id }}?token={{ token }}" class="profile-link">💬 Написать сообщение</a>
+        <!-- <button class="message-btn" onclick="alert('Мессенджер в разработке')">💬 Написать сообщение</button> -->
+        {% else %}
+        <button class="edit-btn" onclick="alert('Редактирование профиля скоро появится')">✏️ Редактировать профиль</button>
+        {% endif %}
+    </div>
+    
+    <!-- Список постов пользователя -->
+    <div class="profile-posts">
+        <h3>Посты {{ user.username }}</h3>
+        {% for post in posts %}
+        <article class="post-card">
+            <div class="post-header">
+                <div class="post-author">
+                    <div class="avatar-small">👤</div>
+                    <div>
+                        <strong><a href="/user/{{ post.author.id }}?token={{ token }}">{{ post.author.username }}</a></strong>
+                        <span class="post-time">{{ post.created_at }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="post-content">
+                <p>{{ post.content }}</p>
+            </div>
+            <div class="post-footer">
+                <button class="like-btn" data-post-id="{{ post.id }}" data-liked="{{ post.liked }}" data-count="{{ post.likes_count }}"> {{ '❤️' if post.liked else '🤍' }} <span class="like-count">{{ post.likes_count }}</span></button>
+                <button class="comment-btn toggle-comments" data-post-id="{{ post.id }}">💬 Ответить({{ post.comments|length }})</button>
+            </div>
+            <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
+                <div class="comments-list">
+                    {% for comment in post.comments %}
+                    <div class="post-card">
+                        <strong>{{ comment.author.username }}</strong> <span class="comment-time">{{ comment.created_at }}</span>
+                        <p>{{ comment.content }}</p>
+                    </div>
+                    {% else %}
+                    <p class="no-comments">Нет комментариев. Будьте первым!</p>
+                    {% endfor %}
+                </div>
+                <!-- Форма добавления комментария -->
+                <form method="post" action="/comment/{{ post.id }}" class="comment-form">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    <input type="text" name="content" placeholder="Написать комментарий..." required>
+                    <button type="submit">→</button>
+                </form>
+            </div>
+        </article>
+    {% else %}
+    <div class="empty-state">
+        <p>Пока нет постов. Напишите первый!</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    // Показывать/скрывать комментарии
+    document.querySelectorAll('.toggle-comments').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const postId = btn.dataset.postId;
+            const commentsDiv = document.getElementById(`comments-${postId}`);
+            if (commentsDiv.style.display === 'none') {
+                commentsDiv.style.display = 'block';
+            } else {
+                commentsDiv.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+<script>
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const postId = btn.dataset.postId;
+            const isLiked = btn.dataset.liked === 'True';
+            const url = isLiked ? `/unlike/${postId}` : `/like/${postId}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ token: '{{ token }}' })
+            });
+            if (response.ok) {
+                // Обновляем состояние кнопки
+                const newLiked = !isLiked;
+                btn.dataset.liked = newLiked;
+                const countSpan = btn.querySelector('.like-count');
+                let count = parseInt(countSpan.innerText);
+                count += newLiked ? 1 : -1;
+                countSpan.innerText = count;
+                btn.innerHTML = (newLiked ? '❤️ ' : '🤍 ') + countSpan.outerHTML;
+            }
+        });
+    });
+</script>
+{% endblock %}

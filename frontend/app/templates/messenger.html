@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Сообщения</h2>
+<div class="dialogs-list">
+    {% for dialog in dialogs %}
+    <a href="/chat/{{ dialog.user.id }}?token={{ token }}" class="dialog-item">
+        <div class="dialog-avatar">👤</div>
+        <div class="dialog-info">
+            <strong>{{ dialog.user.username }} {% if dialog.user.is_online %}🟢{% else %}⚫{% endif %}</strong>
+            <span class="last-message">{{ dialog.last_message.content[:50] }}</span>
+        </div>
+        {% if dialog.unread_count > 0 %}
+        <span class="unread-badge">{{ dialog.unread_count }}</span>
+        {% endif %}
+    </a>
+    {% else %}
+    <p>Нет диалогов</p>
+    {% endfor %}
+</div>
+{% endblock %}

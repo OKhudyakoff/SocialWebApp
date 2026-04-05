@@ -1,0 +1,69 @@
+/* ========== СТРАНИЦА СПИСКА ДИАЛОГОВ ========== */
+.dialogs-list {
+    background: white;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.dialog-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--gray-200);
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.2s;
+}
+
+.dialog-item:hover {
+    background: var(--gray-100);
+    text-decoration: none;
+}
+
+.dialog-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.dialog-info {
+    flex: 1;
+    min-width: 0; /* для обрезки текста */
+}
+
+.dialog-info strong {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    color: var(--gray-800);
+}
+
+.last-message {
+    font-size: 0.85rem;
+    color: var(--gray-600);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.unread-badge {
+    background: var(--primary);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0.2rem 0.5rem;
+    border-radius: 1rem;
+    min-width: 1.5rem;
+    text-align: center;
+    flex-shrink: 0;
+}

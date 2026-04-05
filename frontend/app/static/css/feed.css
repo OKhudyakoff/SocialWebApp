@@ -1,0 +1,141 @@
+/* Пост в ленте */
+.post strong {
+    color: var(--primary-dark);
+    font-size: 1.1rem;
+}
+
+.post a {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s;
+}
+
+.post a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.post p {
+    margin: 0.75rem 0;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.post small {
+    color: var(--gray-600);
+    font-size: 0.8rem;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+/* Стили для ссылки на профиль внутри поста */
+.post-author {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.post-author .avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 9999px;
+    display: inline-block;
+}
+
+/* Feed specific */
+.feed-header h2 {
+    margin-bottom: 1.5rem;
+}
+
+.create-post-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.post-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.post-card-comment {
+    background: rgb(255, 255, 255);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+    margin-left: 3rem;
+    margin-right: 3rem;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s;
+}
+
+.post-card-comment:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.post-author {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.post-time {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    margin-left: 0.5rem;
+}
+
+.post-content p {
+    margin: 0.75rem 0;
+    line-height: 1.5;
+}
+
+.post-footer {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+.like-btn, .comment-btn {
+    background: none;
+    border: none;
+    color: var(--gray-600);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    /* transition: background 0.2s; */
+}
+
+.like-btn:hover, .comment-btn:hover {
+    background: #b6b6b6;
+    transform: none;
+    box-shadow: none;
+}
+
+.comments-section {
+    background: #ffffff;
+}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="feed-header">
+    <h2>Лента новостей</h2>
+</div>
+
+<!-- Форма создания поста -->
+<!-- <div class="create-post-card">
+    <form method="post" action="/feed">
+        <textarea name="content" placeholder="Что у вас нового? 📝" required></textarea>
+        <input type="hidden" name="token" value="{{ token }}">
+        <div class="form-actions">
+            <button type="submit">Опубликовать</button>
+        </div>
+    </form>
+</div> -->
+
+<form method="post" action="/feed">
+    <textarea name="content" placeholder="Что у вас нового? 📝" required></textarea>
+    <input type="hidden" name="token" value="{{ token }}">
+    <div class="form-actions">
+        <button type="submit">Опубликовать</button>
+    </div>
+</form>
+
+<!-- Список постов -->
+<div class="posts-feed">
+    {% for post in posts %}
+    <article class="post-card">
+        <div class="post-header">
+            <div class="post-author">
+                <div class="avatar-small">👤</div>
+                <div>
+                    <strong><a href="/user/{{ post.author.id }}?token={{ token }}">{{ post.author.username }}</a></strong>
+                    <span class="post-time">{{ post.created_at }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="post-content">
+            <p>{{ post.content }}</p>
+        </div>
+        <div class="post-footer">
+            <button class="like-btn" data-post-id="{{ post.id }}" data-liked="{{ post.liked }}" data-like-count="{{ post.likes_count }}" data-comments-count="{{ post.comments_count }}"> {{ '❤️' if post.liked else '🤍' }} <span class="like-count">{{ post.likes_count }}</span></button>
+            <button class="comment-btn toggle-comments" data-post-id="{{ post.id }}">💬 Ответить({{ post.comments_count }})</button>
+        </div>
+        <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
+            <div class="comments-list">
+                {% for comment in post.comments %}
+                <div class="post-card-comment">
+                    <strong>{{ comment.author.username }}</strong> <span class="comment-time">{{ comment.created_at }}</span>
+                    <p>{{ comment.content }}</p>
+                </div>
+                {% else %}
+                <p class="no-comments">Нет комментариев. Будьте первым!</p>
+                {% endfor %}
+            </div>
+            <!-- Форма добавления комментария -->
+            <form method="post" action="/comment/{{ post.id }}" class="comment-form">
+                <input type="hidden" name="token" value="{{ token }}">
+                <input type="text" name="content" placeholder="Написать комментарий..." required>
+                <button type="submit">→</button>
+            </form>
+        </div>
+    </article>
+    {% else %}
+    <div class="empty-state">
+        <p>Пока нет постов. Напишите первый!</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    // Показывать/скрывать комментарии
+    document.querySelectorAll('.toggle-comments').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const postId = btn.dataset.postId;
+            const commentsDiv = document.getElementById(`comments-${postId}`);
+            if (commentsDiv.style.display === 'none') {
+                commentsDiv.style.display = 'block';
+            } else {
+                commentsDiv.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+<script>
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const postId = btn.dataset.postId;
+            const isLiked = btn.dataset.liked === 'True';
+            const url = isLiked ? `/unlike/${postId}` : `/like/${postId}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ token: '{{ token }}' })
+            });
+            if (response.ok) {
+                // Обновляем состояние кнопки
+                const newLiked = !isLiked;
+                btn.dataset.liked = newLiked ? 'True' : 'False';
+                const countSpan = btn.querySelector('.like-count');
+                let count = parseInt(countSpan.innerText);
+                count += newLiked ? 1 : -1;
+                countSpan.innerText = count;
+                btn.innerHTML = (newLiked ? '❤️ ' : '🤍 ') + countSpan.outerHTML;
+            }
+        });
+    });
+</script>
+
+{% endblock %}

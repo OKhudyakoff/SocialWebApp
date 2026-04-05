@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Social Network</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script>
+        let currentUserId = {{ current_user_id|default(0) }};
+        let token = "{{ token|default('') }}";
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Боковое меню (сайдбар) будет отображаться только когда пользователь залогинен -->
+        {% if request.url.path.startswith('/feed') or request.url.path.startswith('/user') or request.url.path.startswith('/contacts') or request.url.path.startswith('/messages') or request.url.path.startswith('/chat')%}
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="avatar">👤</div>
+                <div class="user-info">
+                     <a href="/user/{{ current_user_id }}?token={{ token }}" class="username">{{ current_username if current_username else 'User' }}</a>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/feed?token={{ token }}" class="nav-item">
+                    Лента
+                </a>
+                <!-- <a href="/user/{{ current_user_id }}?token={{ token }}" class="nav-item">
+                    Мой профиль
+                </a> -->
+                <a href="/messages?token={{ token }}" class="nav-item">
+                    Сообщения
+                </a>
+                <a href="/contacts?token={{ token }}" class="nav-item">
+                    Все пользователи
+                </a>
+                <a href="/logout" class="nav-item logout">
+                    Выйти
+                </a>
+            </nav>
+        </aside>
+        {% endif %}
+        
+        <main class="main-content">
+            <button class="hamburger" id="hamburger-btn" aria-label="Меню">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="container">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+<!-- Toast уведомление -->
+<div id="toast" class="toast hidden">В разработке 🚧</div>
+<div id="overlay" class="overlay"></div>
+
+<script>
+    // Перехватываем клики по ссылкам с классом "under-construction"
+    document.addEventListener('DOMContentLoaded', function() {
+        const links = document.querySelectorAll('.under-construction');
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault(); // Отменяем переход
+                showToast('В разработке 🚧');
+            });
+        });
+    });
+
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.remove('hidden');
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.classList.add('hidden');
+        }, 2000);
+    }
+</script>
+
+<script>
+    // Динамический WebSocket URL
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsHost = window.location.hostname; // localhost или 192.168.x.x
+    const wsPort = 8000;
+    const WS_URL = `${wsProtocol}//${wsHost}:${wsPort}`;
+    
+    let globalWs = null;
+    
+    function connectGlobalWebSocket() {
+        if (!currentUserId || !token) return;
+        if (globalWs && globalWs.readyState === WebSocket.OPEN) return;
+        
+        globalWs = new WebSocket(`${WS_URL}/ws/${currentUserId}?token=${token}`);
+        window.globalWs = globalWs; // сделать доступным для chat.html
+        
+        globalWs.onopen = () => console.log("✅ Global WebSocket connected");
+        
+        globalWs.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === "new_message") {
+                handleNewMessage(data.message);
+            } else if (data.type === "status_update") {
+                updateUserStatus(data.user_id, data.is_online);
+            }
+        };
+        
+        globalWs.onclose = (event) => {
+            console.log(`WebSocket closed: code=${event.code}, reason=${event.reason}, wasClean=${event.wasClean}`);
+            // ... переподключение
+        };
+        globalWs.onerror = (err) => console.error("WebSocket error:", err);
+    }
+    
+    function handleNewMessage(message) {
+        const currentPath = window.location.pathname;
+        const senderId = message.sender_id;
+        
+        if (currentPath.startsWith('/chat/') && currentPath.endsWith(`/${senderId}`)) {
+            // Мы в чате с отправителем – добавляем сообщение в DOM и отмечаем его прочитанным
+            if (typeof window.appendChatMessage === 'function') {
+                window.appendChatMessage(message, false);
+            }
+            // Отправить запрос на бэкенд, чтобы отметить это сообщение как прочитанное
+            fetch(`/messages/read/${senderId}?token=${token}`, { method: 'PUT' }).catch(console.error);
+        } else {
+            showToast(`✉️ Новое сообщение от ${message.sender_name || 'пользователя'}`);
+            if (currentPath === '/messages') {
+                refreshDialogsList();
+            }
+        }
+    }
+    
+    async function refreshDialogsList() {
+        if (window.location.pathname !== '/messages') return;
+        // Простая перезагрузка страницы диалогов
+        window.location.reload();
+    }
+
+    function updateUserStatus(userId, isOnline) {
+        const statusElement = document.getElementById(`user-status-${userId}`);
+        if (statusElement) {
+            statusElement.innerHTML = isOnline ? "🟢 Онлайн" : "⚫ Офлайн";
+            statusElement.className = `status ${isOnline ? 'online' : 'offline'}`;
+        }
+        // Если это собеседник в текущем чате
+        const currentChatUserId = window.currentChatUserId;
+        if (currentChatUserId == userId) {
+            const chatStatus = document.getElementById('user-status');
+            if (chatStatus) {
+                chatStatus.innerHTML = isOnline ? "🟢 Онлайн" : "⚫ Офлайн";
+                chatStatus.className = `status ${isOnline ? 'online' : 'offline'}`;
+            }
+        }
+    }
+    
+    // Запускаем WebSocket, если пользователь залогинен
+    if (currentUserId && token) {
+        connectGlobalWebSocket();
+    }
+</script>
+
+<script>
+    // Гамбургер-меню для мобильных
+    const hamburger = document.getElementById('hamburger-btn');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function toggleMenu() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+        document.body.classList.toggle('menu-open');
+        // Анимация иконки
+        if (hamburger) {
+            hamburger.classList.toggle('active');
+        }
+    }
+
+    if (hamburger) {
+        hamburger.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+    }
+
+    // Закрывать меню при клике на ссылку в сайдбаре (опционально)
+    document.querySelectorAll('.sidebar-nav a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.classList.remove('menu-open');
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
